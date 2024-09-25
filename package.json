@@ -1,11 +1,11 @@
 {
-	"name": "wordcount",
-	"displayName": "Word Count",
+	"name": "pagecount",
+	"displayName": "Page Count",
 	"version": "0.1.0",
-	"publisher": "ms-vscode",
-	"description": "Markdown Word Count Example - a status bar contribution that reports out the number of words in a Markdown document as you interact with it.",
+	"publisher": "Patrick Kranz",
+	"description": "Markdown Page Count based on Word Count Example - a status bar contribution that reports out the number of words and approximated pages in a Markdown document as you interact with it.",
 	"author": {
-		"name": "seanmcbreen"
+		"name": "Patrick Kranz"
 	},
 	"categories": [
 		"Other"
@@ -21,7 +21,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-wordcount.git"
+		"url": "https://github.com/LokiMidgard/vscode-pagecount.git"
 	},
 	"engines": {
 		"vscode": "0.10.x"
@@ -30,6 +30,18 @@
 	"scripts": {
 		"vscode:prepublish": "node ./node_modules/vscode/bin/compile",
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./"
+	},
+	"contributes": {
+		"configuration":{
+			"title": "Page Count",
+			"properties": {
+				"pagecount.pagesize":{
+					"type":"number",
+					"default":250,
+					"description": "The assumed number of words per page."
+				}
+			}
+		}
 	},
 	"devDependencies": {
 		"vscode": "0.10.x",

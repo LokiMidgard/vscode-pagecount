@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import {window, workspace, commands, Disposable, ExtensionContext, StatusBarAlignment, StatusBarItem, TextDocument} from 'vscode';
+import { window, workspace, commands, Disposable, ExtensionContext, StatusBarAlignment, StatusBarItem, TextDocument } from 'vscode';
+import vscode = require('vscode');
 
 // this method is called when your extension is activated. activation is
 // controlled by the activation events defined in package.json
@@ -25,11 +26,11 @@ export class WordCounter {
     private _statusBarItem: StatusBarItem;
 
     public updateWordCount() {
-        
+
         // Create as needed
         if (!this._statusBarItem) {
             this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
-        } 
+        }
 
         // Get the current text editor
         let editor = window.activeTextEditor;
@@ -43,9 +44,14 @@ export class WordCounter {
         // Only update status if an MD file
         if (doc.languageId === "markdown") {
             let wordCount = this._getWordCount(doc);
+            const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesize');
+            const pageCount = Math.ceil(wordCount / pageSize)
+            const wordText = wordCount !== 1 ? `$(pencil) ${wordCount} Words` : '$(pencil) 1 Word';
+            const pageText = pageCount !== 1 ? ` on ${pageCount} Pages` : ' on 1 Page';
+
 
             // Update the status bar
-            this._statusBarItem.text = wordCount !== 1 ? `$(pencil) ${wordCount} Words` : '$(pencil) 1 Word';
+            this._statusBarItem.text = wordText + pageText;
             this._statusBarItem.show();
         } else {
             this._statusBarItem.hide();
