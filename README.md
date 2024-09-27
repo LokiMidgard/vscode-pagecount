@@ -16,4 +16,4 @@ The page estimation can be adjusted based on either word count or line count, wi
 
 This extension works with plain text and does not interpret Markdown syntax. It will count items like dashes from lists and `#` from headings as words. Similarly, frontmatter lines and words will also be included in the word count.
 
-In the future, Markdown parsing (e.g., using remark) may be added, but for now, this is beyond the scope of the extension. However, pull requests are welcome if you'd like to contribute and implement this feature!
+In the future, Markdown parsing (e.g., using remark) may be added, but for now, this is beyond the scope of the extension. However, pull requests are welcome if you'd like to contribute and implement this featur😉
