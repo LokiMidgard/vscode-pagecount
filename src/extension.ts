@@ -51,10 +51,8 @@ export class WordCounter {
 
     public removeWordCountInWorkspace(uri: Uri) {
         // Wenn eine Datei gelöscht wird, sollten wir die Wortzahl dieser Datei entfernen.
-        workspace.openTextDocument(uri).then(doc => {
-            this._workspaceWordCount[uri.toString()] = undefined;
-            this.updateStatusBar();
-        });
+        this._workspaceWordCount[uri.toString()] = undefined;
+        this.updateStatusBar();
     }
 
     public updateWordCountInAllFiles() {
