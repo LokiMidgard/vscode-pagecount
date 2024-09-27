@@ -44,7 +44,6 @@ export class WordCounter {
     public updateWordCountInWorkspace(uri: Uri) {
         workspace.openTextDocument(uri).then(doc => {
             const wordCount = this._getWordCount(doc);
-            uri.toString()
             this._workspaceWordCount[uri.toString()] = wordCount;
             this.updateStatusBar();
         });
@@ -61,7 +60,7 @@ export class WordCounter {
     public updateWordCountInAllFiles() {
         // Lädt alle Markdown-Dateien im Workspace und zählt ihre Wörter
         this._workspaceWordCount = {};
-        workspace.findFiles(vscode.workspace.getConfiguration('pagecount').get<string>('include') || '**/*.md', vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') || '').then(uris => {
+        workspace.findFiles(vscode.workspace.getConfiguration('pagecount').get<string>('include') || '**/*.md', (vscode.workspace.getConfiguration('pagecount').get<string[]>('excludeFromTotal')?.[0] || '')).then(uris => {
             uris.forEach(uri => {
                 this.updateWordCountInWorkspace(uri);
             });
@@ -76,7 +75,7 @@ export class WordCounter {
         }
         const currentUri =
             window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.toString()
-                //  && (vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') == undefined || !minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') ?? ''))
+                //  && (vscode.workspace.getConfiguration('pagecount').get<string[]>('excludeFromTotal') == undefined || !minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string[]>('excludeFromTotal') ?? ''))
                 && (vscode.workspace.getConfiguration('pagecount').get<string>('include') != undefined && minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string>('include') ?? ''))
                 ? window.activeTextEditor.document.uri.toString()
                 : "";
@@ -85,7 +84,7 @@ export class WordCounter {
             if (this._workspaceWordCount[key] === undefined) {
                 return false;
             }
-            if (vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') && minimatch(key, vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') ?? '')) {
+            if ((vscode.workspace.getConfiguration('pagecount').get<string[]>('excludeFromTotal') ?? []).some(glob => minimatch(key, glob))) {
                 return false;
             }
             return true;

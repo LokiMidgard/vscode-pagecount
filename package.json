@@ -64,8 +64,13 @@
 					"description": "A grob pattern of wich files to count words lines and pages. Used for current page and for total pages"
 				},
 				"pagecount.excludeFromTotal": {
-					"type": "string",
-					"default": "**/node_modules/**",
+					"type": "array",
+					"default": [
+						"**/node_modules/**"
+					],
+					"items": {
+						"type": "string"
+					},
 					"description": "A grob pattern of wich files to exclude files for total calculation. Opening a files will still show the stats, but they are not added to toatal"
 				}
 			}

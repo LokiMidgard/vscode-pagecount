@@ -8,6 +8,6 @@ It's pretty simple open up a text file (default configured to (*.md) files) and 
 
 It will also show you the stats of all files in sum.
 
-You can configure for what files the stats should be shown, and which of those files should not count to the total.
+You can configure for what files the stats should be shown, and which of those files should not count to the total (`node_modules` is excluded by default).
 
 The page approximation can be configured either using words or lines. And for both the number of words/lines per page can also be configured. 

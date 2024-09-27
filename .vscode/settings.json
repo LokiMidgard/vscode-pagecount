@@ -11,13 +11,11 @@
 	"[markdown]": {
 		"editor.cursorSurroundingLines": 0
 	},
-	"pagecount.excludeFromTotal": "**/node_modules/**",
 	"spellright.language": [
 		"en"
 	],
 	"spellright.documentTypes": [
 		"Markdown",
-		"latex",
-		"markdown"
+		"latex"
 	],
 }
