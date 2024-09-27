@@ -24,7 +24,7 @@
 		"url": "https://github.com/LokiMidgard/vscode-pagecount.git"
 	},
 	"engines": {
-		"vscode": "0.10.x"
+		"vscode": "^1.93.0"
 	},
 	"main": "./out/extension",
 	"scripts": {
@@ -35,21 +35,25 @@
 		"configuration": {
 			"title": "Page Count",
 			"properties": {
-				"pagecount.pagesize_in_words": {
+				"pagecount.pagesizeInWords": {
 					"type": "number",
 					"default": 250,
 					"description": "The assumed number of words per page."
 				},
-				"pagecount.pagesize_in_lines": {
+				"pagecount.pagesizeInLines": {
 					"type": "number",
 					"default": 25,
 					"description": "The assumed number of lines per page. Works best with some kind of automatic linebreaking. (no softwrap)"
 				},
-				"pagecount.pagesize_calculation": {
+				"pagecount.pagesizeCalculation": {
 					"type": "string",
 					"enum": [
 						"lines",
 						"words"
+					],
+					"markdownEnumDescriptions": [
+						"- to estimate the page count, the lines will be counted.\n\n- This will count actual linebreaks no soft wraps.\n\n- More acurate when you enforce a realistic line length.",
+						"- to estimate the page count, the words will be counted.\n\n- Less accurate but will work regardles of linebreaking"
 					],
 					"default": "lines",
 					"description": "The used calculation method."
@@ -57,18 +61,20 @@
 				"pagecount.include": {
 					"type": "string",
 					"default": "**/*.md",
-					"description": "A grob pattern of wich files to include."
+					"description": "A grob pattern of wich files to count words lines and pages. Used for current page and for total pages"
 				},
-				"pagecount.exclude": {
+				"pagecount.excludeFromTotal": {
 					"type": "string",
 					"default": "",
-					"description": "A grob pattern of wich files to exclude."
+					"description": "A grob pattern of wich files to exclude files for total calculation. Opening a files will still show the stats, but they are not added to toatal"
 				}
 			}
 		}
 	},
 	"devDependencies": {
-		"typescript": "^1.6.2",
+		"@types/vscode": "^1.93.0",
+		"@types/node": "20.x",
+		"typescript": "^5.6.2",
 		"vscode": "0.10.x"
 	},
 	"dependencies": {
