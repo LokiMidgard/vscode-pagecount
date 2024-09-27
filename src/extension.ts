@@ -103,24 +103,114 @@ export class WordCounter {
         const pageCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]).map(this.calculatePages).reduce((p, c) => p + c, 0);
         const pageCountCurrent = this.calculatePages(this._workspaceWordCount[currentUri]);
 
+
+        function avg(a: number, b: number) { const min = Math.min(a, b); const max = Math.max(a, b); const diff = max - min; return min + (diff / 2) }
+        const speeds = {
+            "6-7 years old": avg(53, 111),
+            "7-8 years old": avg(89, 149),
+            "8-9 years old": avg(107, 162),
+            "9-10 years old": avg(123, 180),
+            "10-11 years old": avg(139, 194),
+            "11-14 years old": avg(150, 204),
+            "Highschool": avg(200, 300),
+            "College": avg(300, 350),
+            "Adults": avg(220, 350)
+            // based on Hasbrouck, J. & Tindal, G. (2017) – Brysbaert, M. (2019)
+            // from https://scholarwithin.com/average-reading-speed#
+        }
+        const reader = vscode.workspace.getConfiguration('pagecount').get<"Custom WPM" | "6-7 years old" | "7-8 years old" | "8-9 years old" | "9-10 years old" | "10-11 years old" | "11-14 years old" | "Highschool" | "College" | "Adults">('readingTime.readingSpead') ?? "Adults";
+        const readSpeed =
+            reader == 'Custom WPM'
+                ? (vscode.workspace.getConfiguration('pagecount').get<number>('readingTime.wordsPerMinute') ?? 1)
+                : speeds[reader];
+        const readTimeTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.wordCount).map(x => x / readSpeed).reduce((p, c) => p + c, 0);
+        const readTimeCurrent = this._workspaceWordCount[currentUri] === undefined
+            ? 0
+            : (this._workspaceWordCount[currentUri]).wordCount / readSpeed;
+
+
         const documentCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).length;
 
         const wordTextCurrent = wordCountCurrent !== 1 ? `${wordCountCurrent.toLocaleString()} Words` : '1 Word';
-        const lineTextCurrent = lineCountCurrent !== 1 ? `in ${lineCountCurrent.toLocaleString()} Lines` : 'on 1 Line';
-        const pageTextCurrent = pageCountCurrent !== 1 ? `on ${pageCountCurrent.toLocaleString()} Pages` : 'on 1 Page';
+        const lineTextCurrent = lineCountCurrent !== 1 ? `${lineCountCurrent.toLocaleString()} Lines` : '1 Line';
+        const pageTextCurrent = pageCountCurrent !== 1 ? `${pageCountCurrent.toLocaleString()} Pages` : '1 Page';
+        const readTextCurrent = calculateTimeText(readTimeCurrent);
+
         const wordTextTotal = wordCountTotal !== 1 ? `${wordCountTotal.toLocaleString()} Words` : '1 Word';
-        const lineTextTotal = lineCountTotal !== 1 ? `in ${lineCountTotal.toLocaleString()} Lines` : 'on 1 Line';
-        const pageTextTotal = pageCountTotal !== 1 ? `on ${pageCountTotal.toLocaleString()} Pages` : 'on 1 Page';
-        const documentTextTotal = documentCountTotal !== 1 ? `in ${documentCountTotal.toLocaleString()} Documents` : 'in 1 Document';
+        const lineTextTotal = lineCountTotal !== 1 ? `${lineCountTotal.toLocaleString()} Lines` : '1 Line';
+        const pageTextTotal = pageCountTotal !== 1 ? `${pageCountTotal.toLocaleString()} Pages` : '1 Page';
+        const readTextTotal = calculateTimeText(readTimeTotal)
+            ;
+        const documentTextTotal = documentCountTotal !== 1 ? `${documentCountTotal.toLocaleString()} Documents` : '1 Document';
 
-        const currentText = `$(pencil) ${wordTextCurrent} ${lineTextCurrent} ${pageTextCurrent}`;
-        const totalText = `$(book) ${wordTextTotal} ${lineTextTotal} ${pageTextTotal} ${documentTextTotal}`;
+        const currentText = `$(pencil) ${formatText(wordTextCurrent, lineTextCurrent, pageTextCurrent, readTextCurrent)}`;
+        const totalText = `$(book) ${formatText(wordTextTotal, lineTextTotal, pageTextTotal, readTextTotal, documentTextTotal)}`;
 
+        let statusText = '';
 
-        this._statusBarItem.text = currentUri === ""
-            ? totalText
-            : `${currentText} ${totalText}`;
+        if (currentUri !== "" && (vscode.workspace.getConfiguration('pagecount').get<boolean>('showCurrentStatsInStatusbar') ?? true)) {
+            statusText = currentText;
+        }
+        if ((vscode.workspace.getConfiguration('pagecount').get<boolean>('showTotalStatsInStatusbar') ?? true)) {
+            if (statusText.length > 0) {
+                statusText += " ";
+            }
+            statusText += totalText;
+        }
+
+        this._statusBarItem.text = statusText;
         this._statusBarItem.show();
+
+        function formatText(wordText: string, lineText: string, pageText: string, timeText: string, documentText?: string): string {
+            let result = "";
+            if (vscode.workspace.getConfiguration('pagecount').get<boolean>('showWordCount') ?? true) {
+                result += wordText;
+            }
+            if (vscode.workspace.getConfiguration('pagecount').get<boolean>('showLineCount') ?? true) {
+                if (result.length > 0) {
+                    result += " in "
+                }
+                result += lineText;
+            }
+            if (vscode.workspace.getConfiguration('pagecount').get<boolean>('showPageCount') ?? true) {
+                if (result.length > 0) {
+                    result += " on "
+                }
+                result += pageText;
+            }
+            if (documentText && (vscode.workspace.getConfiguration('pagecount').get<boolean>('showDocumentCount') ?? true)) {
+                if (result.length > 0) {
+                    result += " in "
+                }
+                result += documentText;
+            }
+            if (vscode.workspace.getConfiguration('pagecount').get<boolean>('showEstimatedReadingTime') ?? true) {
+                if (result.length > 0) {
+                    result += " takes "
+                }
+                result += timeText;
+            }
+            return result;
+
+        }
+
+        function calculateTimeText(readTimeTotal: number) {
+            return readTimeTotal < 1
+                ? `< 1 minute`
+                : Math.ceil(readTimeTotal) === 1
+                    ? '1 minute'
+                    : readTimeTotal < 60
+                        ? `${Math.ceil(readTimeTotal)} minutes`
+                        : readTimeTotal == 60
+                            ? `an hours`
+                            : readTimeTotal % 60 <= 15
+                                ? `${Math.floor(readTimeTotal / 60)} ¼ hours`
+                                : readTimeTotal % 60 <= 30
+                                    ? `${Math.floor(readTimeTotal / 60)} ½ hours`
+                                    : readTimeTotal % 60 <= 45
+                                        ? `${Math.floor(readTimeTotal / 60)} ¾ hours`
+                                        : `${Math.ceil(readTimeTotal / 60)} hours`;
+        }
     }
 
     public _getWordCount(doc: TextDocument): { wordCount: number, lineCount: number } {

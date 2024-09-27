@@ -1,7 +1,7 @@
 {
 	"name": "pagecount",
 	"displayName": "Page Count",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"publisher": "midgard",
 	"description": "Markdown Page Count based on Word Count Example - a status bar contribution that reports out the number of words, lines and approximated pages in the current Markdown document and the total of all.",
 	"author": {
@@ -35,6 +35,63 @@
 		"configuration": {
 			"title": "Page Count",
 			"properties": {
+				"pagecount.showCurrentStatsInStatusbar": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the stats of the current document in the statusbar."
+				},
+				"pagecount.showTotalStatsInStatusbar": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the stats of all documents in the statusbar."
+				},
+				"pagecount.showWordCount": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the word counts."
+				},
+				"pagecount.showLineCount": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the line count."
+				},
+				"pagecount.showPageCount": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the page count."
+				},
+				"pagecount.showDocumentCount": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the document count."
+				},
+				"pagecount.showEstimatedReadingTime": {
+					"type": "boolean",
+					"default": true,
+					"description": "Shows the estimated time needed to read the text."
+				},
+				"pagecount.readingTime.readingSpead": {
+					"type": "string",
+					"enum": [
+						"Custom WPM",
+						"6-7 years old",
+						"7-8 years old",
+						"8-9 years old",
+						"9-10 years old",
+						"10-11 years old",
+						"11-14 years old",
+						"Highschool",
+						"College",
+						"Adults"
+					],
+					"default": "Adults",
+					"description": "The reading speed used to estimate the reading time."
+				},
+				"pagecount.readingTime.wordsPerMinute": {
+					"type": "number",
+					"default": 230,
+					"description": "The reading speed used to estimate the reading time when WPM is choosen."
+				},
 				"pagecount.pagesizeInWords": {
 					"type": "number",
 					"default": 250,
