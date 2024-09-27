@@ -1,7 +1,7 @@
 {
 	"name": "pagecount",
 	"displayName": "Page Count",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"publisher": "midgard",
 	"description": "Markdown Page Count based on Word Count Example - a status bar contribution that reports out the number of words and approximated pages in a Markdown document as you interact with it.",
 	"author": {
@@ -32,19 +32,46 @@
 		"compile": "node ./node_modules/vscode/bin/compile -watch -p ./"
 	},
 	"contributes": {
-		"configuration":{
+		"configuration": {
 			"title": "Page Count",
 			"properties": {
-				"pagecount.pagesize":{
-					"type":"number",
-					"default":250,
+				"pagecount.pagesize_in_words": {
+					"type": "number",
+					"default": 250,
 					"description": "The assumed number of words per page."
+				},
+				"pagecount.pagesize_in_lines": {
+					"type": "number",
+					"default": 25,
+					"description": "The assumed number of lines per page. Works best with some kind of automatic linebreaking. (no softwrap)"
+				},
+				"pagecount.pagesize_calculation": {
+					"type": "string",
+					"enum": [
+						"lines",
+						"words"
+					],
+					"default": "lines",
+					"description": "The used calculation method."
+				},
+				"pagecount.include": {
+					"type": "string",
+					"default": "**/*.md",
+					"description": "A grob pattern of wich files to include."
+				},
+				"pagecount.exclude": {
+					"type": "string",
+					"default": "",
+					"description": "A grob pattern of wich files to exclude."
 				}
 			}
 		}
 	},
 	"devDependencies": {
-		"vscode": "0.10.x",
-		"typescript": "^1.6.2"
+		"typescript": "^1.6.2",
+		"vscode": "0.10.x"
+	},
+	"dependencies": {
+		"minimatch": "^10.0.1"
 	}
 }

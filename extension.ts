@@ -1,75 +1,133 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import { window, workspace, commands, Disposable, ExtensionContext, StatusBarAlignment, StatusBarItem, TextDocument } from 'vscode';
+import { window, workspace, commands, Disposable, ExtensionContext, StatusBarAlignment, StatusBarItem, TextDocument, FileSystemWatcher, Uri } from 'vscode';
 import vscode = require('vscode');
+import { minimatch } from 'minimatch'
 
-// this method is called when your extension is activated. activation is
-// controlled by the activation events defined in package.json
 export function activate(ctx: ExtensionContext) {
 
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "Wordcount" is now active!');
 
-    // create a new word counter
     let wordCounter = new WordCounter();
     let controller = new WordCounterController(wordCounter);
 
-    // add to a list of disposables which are disposed when this extension
+    // Add to a list of disposables which are disposed when this extension
     // is deactivated again.
     ctx.subscriptions.push(controller);
     ctx.subscriptions.push(wordCounter);
 }
 
+type Record<K extends keyof any, T> = {
+    [P in K]: T | undefined;
+};
 export class WordCounter {
 
     private _statusBarItem: StatusBarItem;
+    private _workspaceWordCount: Record<string, { wordCount: number, lineCount: number }> = {}; // Gesamtzahl der Wörter im Workspace
 
-    public updateWordCount() {
 
-        // Create as needed
+    public calculatePages(container: { wordCount: number, lineCount: number } | undefined): number {
+        if (container === undefined) {
+            return 0;
+        }
+        const { wordCount, lineCount } = container;
+        const pageCalculationType = vscode.workspace.getConfiguration('pagecount').get<'lines' | 'words'>('pagesize_calculation') || 'lines';
+
+        if (pageCalculationType == 'words') {
+            const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesize_in_words') || 250;
+            const pageCount = Math.ceil(wordCount / pageSize);
+            return pageCount;
+        } else {
+            const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesize_in_lines') || 25;
+            const pageCount = Math.ceil(lineCount / pageSize);
+            return pageCount;
+        }
+
+
+    }
+
+    public updateWordCountInWorkspace(uri: Uri) {
+        workspace.openTextDocument(uri).then(doc => {
+            const wordCount = this._getWordCount(doc);
+            uri.toString()
+            this._workspaceWordCount[uri.toString()] = wordCount;
+            this.updateStatusBar();
+        });
+    }
+
+    public removeWordCountInWorkspace(uri: Uri) {
+        // Wenn eine Datei gelöscht wird, sollten wir die Wortzahl dieser Datei entfernen.
+        workspace.openTextDocument(uri).then(doc => {
+            this._workspaceWordCount[uri.toString()] = undefined;
+            this.updateStatusBar();
+        });
+    }
+
+    public updateWordCountInAllFiles() {
+        // Lädt alle Markdown-Dateien im Workspace und zählt ihre Wörter
+        this._workspaceWordCount = {};
+        workspace.findFiles(vscode.workspace.getConfiguration('pagecount').get<string>('include') || '**/*.md', vscode.workspace.getConfiguration('pagecount').get<string>('exclude') || '').then(uris => {
+            uris.forEach(uri => {
+                this.updateWordCountInWorkspace(uri);
+            });
+        }).then(() => {
+            this.updateStatusBar();
+        });
+    }
+
+    public updateStatusBar() {
         if (!this._statusBarItem) {
             this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
         }
+        const currentUri =
+            window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.toString()
+                ? window.activeTextEditor.document.uri.toString()
+                : "";
 
-        // Get the current text editor
-        let editor = window.activeTextEditor;
-        if (!editor) {
-            this._statusBarItem.hide();
-            return;
+        const filterKeys = (key: string) => {
+            if (this._workspaceWordCount[key] === undefined) {
+                return false;
+            }
+            if (vscode.workspace.getConfiguration('pagecount').get<string>('exclude') && minimatch(key, vscode.workspace.getConfiguration('pagecount').get<string>('exclude'))) {
+                return false;
+            }
+            return true;
         }
 
-        let doc = editor.document;
+        const wordCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key].wordCount).reduce((p, c) => p + c, 0);
+        const wordCountCurrent = this._workspaceWordCount[currentUri] === undefined
+            ? 0
+            : (this._workspaceWordCount[currentUri]).wordCount;
 
-        // Only update status if an MD file
-        if (doc.languageId === "markdown") {
-            let wordCount = this._getWordCount(doc);
-            const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesize');
-            const pageCount = Math.ceil(wordCount / pageSize)
-            const wordText = wordCount !== 1 ? `$(pencil) ${wordCount} Words` : '$(pencil) 1 Word';
-            const pageText = pageCount !== 1 ? ` on ${pageCount} Pages` : ' on 1 Page';
+        const lineCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key].lineCount).reduce((p, c) => p + c, 0);
+        const lineCountCurrent = (this._workspaceWordCount[currentUri]) === undefined
+            ? 0
+            : (this._workspaceWordCount[currentUri]).lineCount;
+
+        const pageCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]).map(this.calculatePages).reduce((p, c) => p + c, 0);
+        const pageCountCurrent = this.calculatePages(this._workspaceWordCount[currentUri]);
+
+        const wordTextCurrent = wordCountCurrent !== 1 ? `${wordCountCurrent} Words` : '1 Word';
+        const lineTextCurrent = lineCountCurrent !== 1 ? `in ${lineCountCurrent} Lines` : 'on 1 Line';
+        const pageTextCurrent = pageCountCurrent !== 1 ? `on ${pageCountCurrent} Pages` : 'on 1 Page';
+        const wordTextTotal = wordCountTotal !== 1 ? `${wordCountTotal} Words` : '1 Word';
+        const lineTextTotal = lineCountTotal !== 1 ? `in ${lineCountTotal} Lines` : 'on 1 Line';
+        const pageTextTotal = pageCountTotal !== 1 ? `on ${pageCountTotal} Pages` : 'on 1 Page';
+
+        const currentText = `$(pencil) ${wordTextCurrent} ${lineTextCurrent} ${pageTextCurrent}`;
+        const totalText = `$(book) ${wordTextTotal} ${lineTextTotal} ${pageTextTotal}`;
 
 
-            // Update the status bar
-            this._statusBarItem.text = wordText + pageText;
-            this._statusBarItem.show();
-        } else {
-            this._statusBarItem.hide();
-        }
+        this._statusBarItem.text = currentUri === ""
+            ? totalText
+            : `${currentText} ${totalText}`;
+        this._statusBarItem.show();
     }
 
-    public _getWordCount(doc: TextDocument): number {
-        let docContent = doc.getText();
-
-        // Parse out unwanted whitespace so the split is accurate
-        docContent = docContent.replace(/(< ([^>]+)<)/g, '').replace(/\s+/g, ' ');
-        docContent = docContent.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
-        let wordCount = 0;
-        if (docContent != "") {
-            wordCount = docContent.split(" ").length;
-        }
-
-        return wordCount;
+    public _getWordCount(doc: TextDocument): { wordCount: number, lineCount: number } {
+        const docContent = doc.getText();
+        const numberOfLines = docContent.split(/\r\n|\r|\n/).length;
+        const normalizedSpaces = docContent.replace(/\s+/g, ' ').trim();
+        const wordCount = normalizedSpaces !== "" ? normalizedSpaces.split(" ").length : 0;
+        return { wordCount, lineCount: numberOfLines };
     }
 
     public dispose() {
@@ -84,19 +142,31 @@ class WordCounterController {
 
     constructor(wordCounter: WordCounter) {
         this._wordCounter = wordCounter;
-        this._wordCounter.updateWordCount();
-
-        // subscribe to selection change and editor activation events
         let subscriptions: Disposable[] = [];
+
+
+        // Watch for changes in markdown files in the workspace
+        let watcher = workspace.createFileSystemWatcher('**/*.md');
+
+        watcher.onDidCreate(uri => wordCounter.updateWordCountInWorkspace(uri));
+        watcher.onDidChange(uri => wordCounter.updateWordCountInWorkspace(uri));
+        watcher.onDidDelete(uri => wordCounter.removeWordCountInWorkspace(uri));
+        subscriptions.push(watcher);
+
+
+        vscode.workspace.onDidChangeConfiguration(e => wordCounter.updateWordCountInAllFiles(), this, subscriptions);
         window.onDidChangeTextEditorSelection(this._onEvent, this, subscriptions);
         window.onDidChangeActiveTextEditor(this._onEvent, this, subscriptions);
 
-        // create a combined disposable from both event subscriptions
+        wordCounter.updateWordCountInAllFiles();
+
         this._disposable = Disposable.from(...subscriptions);
     }
 
     private _onEvent() {
-        this._wordCounter.updateWordCount();
+        if (window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri) {
+            this._wordCounter.updateWordCountInWorkspace(window.activeTextEditor.document.uri);
+        }
     }
 
     public dispose() {
