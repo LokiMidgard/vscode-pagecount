@@ -1,7 +1,7 @@
 # VSCode - PageCount README
  
 This is based on the WordCount sample extension
-
+![Screenshot](images/Screenshot.png)
 ## Functionality
 
 It's pretty simple open up a text file (default configured to (*.md) files) and the status bar will have an auto-updating wordcount with approximated page count (words per page can be configured) in it...

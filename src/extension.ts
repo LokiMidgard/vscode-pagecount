@@ -105,13 +105,13 @@ export class WordCounter {
 
         const documentCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).length;
 
-        const wordTextCurrent = wordCountCurrent !== 1 ? `${wordCountCurrent} Words` : '1 Word';
-        const lineTextCurrent = lineCountCurrent !== 1 ? `in ${lineCountCurrent} Lines` : 'on 1 Line';
-        const pageTextCurrent = pageCountCurrent !== 1 ? `on ${pageCountCurrent} Pages` : 'on 1 Page';
-        const wordTextTotal = wordCountTotal !== 1 ? `${wordCountTotal} Words` : '1 Word';
-        const lineTextTotal = lineCountTotal !== 1 ? `in ${lineCountTotal} Lines` : 'on 1 Line';
-        const pageTextTotal = pageCountTotal !== 1 ? `on ${pageCountTotal} Pages` : 'on 1 Page';
-        const documentTextTotal = documentCountTotal !== 1 ? `in ${documentCountTotal} Documents` : 'in 1 Document';
+        const wordTextCurrent = wordCountCurrent !== 1 ? `${wordCountCurrent.toLocaleString()} Words` : '1 Word';
+        const lineTextCurrent = lineCountCurrent !== 1 ? `in ${lineCountCurrent.toLocaleString()} Lines` : 'on 1 Line';
+        const pageTextCurrent = pageCountCurrent !== 1 ? `on ${pageCountCurrent.toLocaleString()} Pages` : 'on 1 Page';
+        const wordTextTotal = wordCountTotal !== 1 ? `${wordCountTotal.toLocaleString()} Words` : '1 Word';
+        const lineTextTotal = lineCountTotal !== 1 ? `in ${lineCountTotal.toLocaleString()} Lines` : 'on 1 Line';
+        const pageTextTotal = pageCountTotal !== 1 ? `on ${pageCountTotal.toLocaleString()} Pages` : 'on 1 Page';
+        const documentTextTotal = documentCountTotal !== 1 ? `in ${documentCountTotal.toLocaleString()} Documents` : 'in 1 Document';
 
         const currentText = `$(pencil) ${wordTextCurrent} ${lineTextCurrent} ${pageTextCurrent}`;
         const totalText = `$(book) ${wordTextTotal} ${lineTextTotal} ${pageTextTotal} ${documentTextTotal}`;
