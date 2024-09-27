@@ -76,7 +76,7 @@ export class WordCounter {
         }
         const currentUri =
             window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.toString()
-              //  && (vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') == undefined || !minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') ?? ''))
+                //  && (vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') == undefined || !minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string>('excludeFromTotal') ?? ''))
                 && (vscode.workspace.getConfiguration('pagecount').get<string>('include') != undefined && minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string>('include') ?? ''))
                 ? window.activeTextEditor.document.uri.toString()
                 : "";
@@ -104,15 +104,18 @@ export class WordCounter {
         const pageCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]).map(this.calculatePages).reduce((p, c) => p + c, 0);
         const pageCountCurrent = this.calculatePages(this._workspaceWordCount[currentUri]);
 
+        const documentCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).length;
+
         const wordTextCurrent = wordCountCurrent !== 1 ? `${wordCountCurrent} Words` : '1 Word';
         const lineTextCurrent = lineCountCurrent !== 1 ? `in ${lineCountCurrent} Lines` : 'on 1 Line';
         const pageTextCurrent = pageCountCurrent !== 1 ? `on ${pageCountCurrent} Pages` : 'on 1 Page';
         const wordTextTotal = wordCountTotal !== 1 ? `${wordCountTotal} Words` : '1 Word';
         const lineTextTotal = lineCountTotal !== 1 ? `in ${lineCountTotal} Lines` : 'on 1 Line';
         const pageTextTotal = pageCountTotal !== 1 ? `on ${pageCountTotal} Pages` : 'on 1 Page';
+        const documentTextTotal = documentCountTotal !== 1 ? `in ${documentCountTotal} Documents` : 'in 1 Document';
 
         const currentText = `$(pencil) ${wordTextCurrent} ${lineTextCurrent} ${pageTextCurrent}`;
-        const totalText = `$(book) ${wordTextTotal} ${lineTextTotal} ${pageTextTotal}`;
+        const totalText = `$(book) ${wordTextTotal} ${lineTextTotal} ${pageTextTotal} ${documentTextTotal}`;
 
 
         this._statusBarItem.text = currentUri === ""
