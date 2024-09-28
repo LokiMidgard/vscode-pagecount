@@ -69,7 +69,7 @@ export class WordCounter {
 
     public updateStatusBar() {
         if (!this._statusBarItem) {
-            this._statusBarItem = [window.createStatusBarItem(StatusBarAlignment.Left), window.createStatusBarItem(StatusBarAlignment.Left)];
+            this._statusBarItem = [window.createStatusBarItem(StatusBarAlignment.Right), window.createStatusBarItem(StatusBarAlignment.Left)];
         }
         const currentUri =
             window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.toString()
