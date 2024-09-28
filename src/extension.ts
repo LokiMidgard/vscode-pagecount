@@ -17,7 +17,7 @@ export function activate(ctx: ExtensionContext) {
 
 export class WordCounter {
 
-    private _statusBarItem: StatusBarItem | undefined;
+    private _statusBarItem: [StatusBarItem, StatusBarItem] | undefined;
     private _workspaceWordCount: Record<string, { wordCount: number, lineCount: number } | undefined> = {}; // Gesamtzahl der Wörter im Workspace
 
 
@@ -69,7 +69,7 @@ export class WordCounter {
 
     public updateStatusBar() {
         if (!this._statusBarItem) {
-            this._statusBarItem = window.createStatusBarItem(StatusBarAlignment.Left);
+            this._statusBarItem = [window.createStatusBarItem(StatusBarAlignment.Left), window.createStatusBarItem(StatusBarAlignment.Left)];
         }
         const currentUri =
             window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.toString()
@@ -144,20 +144,21 @@ export class WordCounter {
         const currentText = `$(pencil) ${formatText(wordTextCurrent, lineTextCurrent, pageTextCurrent, readTextCurrent)}`;
         const totalText = `$(book) ${formatText(wordTextTotal, lineTextTotal, pageTextTotal, readTextTotal, documentTextTotal)}`;
 
-        let statusText = '';
+
 
         if (currentUri !== "" && (vscode.workspace.getConfiguration('pagecount').get<boolean>('showCurrentStatsInStatusbar') ?? true)) {
-            statusText = currentText;
+            this._statusBarItem[0].text = currentText;
+            this._statusBarItem[0].show();
+        } else {
+            this._statusBarItem[0].hide();
         }
         if ((vscode.workspace.getConfiguration('pagecount').get<boolean>('showTotalStatsInStatusbar') ?? true)) {
-            if (statusText.length > 0) {
-                statusText += " ";
-            }
-            statusText += totalText;
+            this._statusBarItem[1].text = totalText;
+            this._statusBarItem[1].show();
+        } else {
+            this._statusBarItem[1].hide();
         }
 
-        this._statusBarItem.text = statusText;
-        this._statusBarItem.show();
 
         function formatText(wordText: string, lineText: string, pageText: string, timeText: string, documentText?: string): string {
             let result = "";
@@ -220,7 +221,7 @@ export class WordCounter {
     }
 
     public dispose() {
-        this._statusBarItem?.dispose();
+        this._statusBarItem?.forEach(d => d.dispose());
     }
 }
 

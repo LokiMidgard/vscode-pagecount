@@ -1,7 +1,7 @@
 {
 	"name": "pagecount",
 	"displayName": "Page Count",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"publisher": "midgard",
 	"description": "Markdown Page Count based on Word Count Example - a status bar contribution that reports out the number of words, lines and approximated pages in the current Markdown document and the total of all.",
 	"author": {
