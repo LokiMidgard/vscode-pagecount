@@ -15,8 +15,6 @@ export function activate(ctx: ExtensionContext) {
     ctx.subscriptions.push(wordCounter);
 }
 
-
-
 export class WordCounter {
 
     private _statusBarItem: [StatusBarItem, StatusBarItem] | undefined;
