@@ -19,6 +19,7 @@ export class WordCounter {
 
     private _statusBarItem: [StatusBarItem, StatusBarItem] | undefined;
     private _workspaceWordCount: Record<string, { wordCount: number, lineCount: number } | undefined> = {}; // Gesamtzahl der Wörter im Workspace
+    private currentSelection: { wordCount: number, lineCount: number } | undefined; // Gesamtzahl der Wörter im Workspace
 
 
     public calculatePages(container: { wordCount: number, lineCount: number } | undefined): number {
@@ -44,7 +45,9 @@ export class WordCounter {
     public updateWordCountInWorkspace(uri: Uri) {
         workspace.openTextDocument(uri).then(doc => {
             const wordCount = this._getWordCount(doc);
-            this._workspaceWordCount[uri.toString()] = wordCount;
+            this.currentSelection = wordCount;
+            if (uri.scheme === 'file') // ignore filese not on disk, like git filese from diff view
+                this._workspaceWordCount[uri.toString()] = wordCount;
             this.updateStatusBar();
         });
     }
@@ -72,11 +75,13 @@ export class WordCounter {
             this._statusBarItem = [window.createStatusBarItem(StatusBarAlignment.Right), window.createStatusBarItem(StatusBarAlignment.Left)];
         }
         const currentUri =
-            window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.toString()
+            window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri.path
                 //  && (vscode.workspace.getConfiguration('pagecount').get<string[]>('excludeFromTotal') == undefined || !minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string[]>('excludeFromTotal') ?? ''))
-                && (vscode.workspace.getConfiguration('pagecount').get<string>('include') != undefined && minimatch(window.activeTextEditor.document.uri.toString(), vscode.workspace.getConfiguration('pagecount').get<string>('include') ?? ''))
+                && (vscode.workspace.getConfiguration('pagecount').get<string>('include') != undefined && minimatch(window.activeTextEditor.document.uri.path, vscode.workspace.getConfiguration('pagecount').get<string>('include') ?? ''))
                 ? window.activeTextEditor.document.uri.toString()
                 : "";
+
+
 
         const filterKeys = (key: string) => {
             if (this._workspaceWordCount[key] === undefined) {
@@ -89,17 +94,18 @@ export class WordCounter {
         }
 
         const wordCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.wordCount).reduce((p, c) => p + c, 0);
-        const wordCountCurrent = this._workspaceWordCount[currentUri] === undefined
+        const current = this.currentSelection ?? this._workspaceWordCount[currentUri];
+        const wordCountCurrent = current === undefined
             ? 0
-            : (this._workspaceWordCount[currentUri]).wordCount;
+            : (current).wordCount;
 
         const lineCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.lineCount).reduce((p, c) => p + c, 0);
-        const lineCountCurrent = (this._workspaceWordCount[currentUri]) === undefined
+        const lineCountCurrent = (current) === undefined
             ? 0
-            : (this._workspaceWordCount[currentUri]).lineCount;
+            : (current).lineCount;
 
         const pageCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]).map(this.calculatePages).reduce((p, c) => p + c, 0);
-        const pageCountCurrent = this.calculatePages(this._workspaceWordCount[currentUri]);
+        const pageCountCurrent = this.calculatePages(current);
 
 
         function avg(a: number, b: number) { const min = Math.min(a, b); const max = Math.max(a, b); const diff = max - min; return min + (diff / 2) }
@@ -122,9 +128,9 @@ export class WordCounter {
                 ? (vscode.workspace.getConfiguration('pagecount').get<number>('readingTime.wordsPerMinute') ?? 1)
                 : speeds[reader];
         const readTimeTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.wordCount).map(x => x / readSpeed).reduce((p, c) => p + c, 0);
-        const readTimeCurrent = this._workspaceWordCount[currentUri] === undefined
+        const readTimeCurrent = current === undefined
             ? 0
-            : (this._workspaceWordCount[currentUri]).wordCount / readSpeed;
+            : (current).wordCount / readSpeed;
 
 
         const documentCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).length;
