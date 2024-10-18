@@ -1,7 +1,7 @@
 {
 	"name": "pagecount",
 	"displayName": "Page Count",
-	"version": "0.2.1",
+	"version": "0.3.1",
 	"publisher": "midgard",
 	"description": "Markdown Page Count based on Word Count Example - a status bar contribution that reports out the number of words, lines and approximated pages in the current Markdown document and the total of all.",
 	"author": {
@@ -106,17 +106,24 @@
 					"default": 25,
 					"description": "The assumed number of lines per page. Works best with some kind of automatic linebreaking. (no softwrap)"
 				},
+				"pagecount.pagesizeInCharacters": {
+					"type": "number",
+					"default": 1500,
+					"description": "The assumed number of characters per page. (no whitespaces)"
+				},
 				"pagecount.pagesizeCalculation": {
 					"type": "string",
 					"enum": [
+						"characters",
 						"lines",
 						"words"
 					],
 					"markdownEnumDescriptions": [
+						"- to estimate the page count, the characters will be counted.\n\n- This will count every non whitespace character.",
 						"- to estimate the page count, the lines will be counted.\n\n- This will count actual linebreaks no soft wraps.\n\n- More acurate when you enforce a realistic line length.",
 						"- to estimate the page count, the words will be counted.\n\n- Less accurate but will work regardles of linebreaking"
 					],
-					"default": "lines",
+					"default": "characters",
 					"description": "The used calculation method."
 				},
 				"pagecount.include": {

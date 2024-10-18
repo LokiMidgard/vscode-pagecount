@@ -15,27 +15,33 @@ export function activate(ctx: ExtensionContext) {
     ctx.subscriptions.push(wordCounter);
 }
 
+type ConuterData = { wordCount: number, lineCount: number, characters: number };
+
 export class WordCounter {
 
     private _statusBarItem: [StatusBarItem, StatusBarItem] | undefined;
-    private _workspaceWordCount: Record<string, { wordCount: number, lineCount: number } | undefined> = {}; // Gesamtzahl der Wörter im Workspace
-    private currentSelection: { wordCount: number, lineCount: number } | undefined; // Gesamtzahl der Wörter im Workspace
+    private _workspaceWordCount: Record<string, ConuterData | undefined> = {}; // Gesamtzahl der Wörter im Workspace
+    private currentSelection: ConuterData | undefined; // Gesamtzahl der Wörter im Workspace
 
 
-    public calculatePages(container: { wordCount: number, lineCount: number } | undefined): number {
+    public calculatePages(container: ConuterData | undefined): number {
         if (container === undefined) {
             return 0;
         }
-        const { wordCount, lineCount } = container;
-        const pageCalculationType = vscode.workspace.getConfiguration('pagecount').get<'lines' | 'words'>('pagesizeCalculation') || 'lines';
+        const { wordCount, lineCount, characters } = container;
+        const pageCalculationType = vscode.workspace.getConfiguration('pagecount').get<'lines' | 'words' | 'characters'>('pagesizeCalculation') || 'characters';
 
         if (pageCalculationType == 'words') {
             const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesizeInWords') || 250;
             const pageCount = Math.ceil(wordCount / pageSize);
             return pageCount;
-        } else {
+        } else if (pageCalculationType == 'lines') {
             const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesizeInLines') || 25;
             const pageCount = Math.ceil(lineCount / pageSize);
+            return pageCount;
+        } else {
+            const pageSize = vscode.workspace.getConfiguration('pagecount').get<number>('pagesizeInCharacters') || 1500;
+            const pageCount = Math.ceil(characters / pageSize);
             return pageCount;
         }
 
@@ -93,8 +99,9 @@ export class WordCounter {
             return true;
         }
 
-        const wordCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.wordCount).reduce((p, c) => p + c, 0);
         const current = this.currentSelection ?? this._workspaceWordCount[currentUri];
+
+        const wordCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.wordCount).reduce((p, c) => p + c, 0);
         const wordCountCurrent = current === undefined
             ? 0
             : (current).wordCount;
@@ -103,6 +110,11 @@ export class WordCounter {
         const lineCountCurrent = (current) === undefined
             ? 0
             : (current).lineCount;
+
+        const charCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]!.characters).reduce((p, c) => p + c, 0);
+        const charCountCurrent = (current) === undefined
+            ? 0
+            : (current).characters;
 
         const pageCountTotal = Object.keys(this._workspaceWordCount).filter(filterKeys).map(key => this._workspaceWordCount[key]).map(this.calculatePages).reduce((p, c) => p + c, 0);
         const pageCountCurrent = this.calculatePages(current);
@@ -218,12 +230,13 @@ export class WordCounter {
         }
     }
 
-    public _getWordCount(doc: TextDocument): { wordCount: number, lineCount: number } {
+    public _getWordCount(doc: TextDocument): ConuterData {
         const docContent = doc.getText();
+        const numberOfChars = docContent.replaceAll(/[\s\n\r]+/g, '').length;
         const numberOfLines = docContent.split(/\r\n|\r|\n/).length;
-        const normalizedSpaces = docContent.replace(/\s+/g, ' ').trim();
+        const normalizedSpaces = docContent.replaceAll(/\s+/g, ' ').trim();
         const wordCount = normalizedSpaces !== "" ? normalizedSpaces.split(" ").length : 0;
-        return { wordCount, lineCount: numberOfLines };
+        return { wordCount, lineCount: numberOfLines, characters: numberOfChars };
     }
 
     public dispose() {
