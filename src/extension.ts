@@ -264,15 +264,21 @@ class WordCounterController {
 
 
         vscode.workspace.onDidChangeConfiguration(e => wordCounter.updateWordCountInAllFiles(), this, subscriptions);
-        window.onDidChangeTextEditorSelection(this._onEvent, this, subscriptions);
-        window.onDidChangeActiveTextEditor(this._onEvent, this, subscriptions);
+        window.onDidChangeTextEditorSelection(this._onTextSelectionEvent, this, subscriptions);
+        window.onDidChangeActiveTextEditor(this._onActiveEditorEvent, this, subscriptions);
 
         wordCounter.updateWordCountInAllFiles();
 
         this._disposable = Disposable.from(...subscriptions);
     }
 
-    private _onEvent() {
+    private _onActiveEditorEvent() {
+        this._wordCounter.updateWordCountInAllFiles();
+        if (window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri) {
+            this._wordCounter.updateWordCountInWorkspace(window.activeTextEditor.document.uri);
+        }
+    }
+    private _onTextSelectionEvent() {
         if (window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri) {
             this._wordCounter.updateWordCountInWorkspace(window.activeTextEditor.document.uri);
         }
