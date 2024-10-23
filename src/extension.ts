@@ -235,7 +235,10 @@ export class WordCounter {
         const numberOfChars = docContent.replaceAll(/[\s\n\r]+/g, '').length;
         const numberOfLines = docContent.split(/\r\n|\r|\n/).length;
         const normalizedSpaces = docContent.replaceAll(/\s+/g, ' ').trim();
-        const wordCount = normalizedSpaces !== "" ? normalizedSpaces.split(" ").length : 0;
+        const wordCount = normalizedSpaces !== "" ? normalizedSpaces
+            .replaceAll(/(^|\s)\S*\w\S*(?=\s|$)/g, 'χ') // replace every word with a placeholder
+            .replaceAll(/[^χ]/g, '') // remove all non placeholder
+            .length : 0;
         return { wordCount, lineCount: numberOfLines, characters: numberOfChars };
     }
 
