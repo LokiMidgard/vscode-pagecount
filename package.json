@@ -33,7 +33,8 @@
 		"package": "webpack --mode production --devtool hidden-source-map",
 		"compile": "webpack",
 		"watch": "webpack --watch",
-		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. ."
+		"run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
+		"publish": " npx @vscode/vsce package && npx @vscode/vsce publish"
 	},
 	"contributes": {
 		"configuration": {
