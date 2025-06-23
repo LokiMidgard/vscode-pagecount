@@ -52,8 +52,10 @@ export class WordCounter {
         workspace.openTextDocument(uri).then(doc => {
             const wordCount = this._getWordCount(doc);
             this.currentSelection = wordCount;
-            if (uri.scheme === 'file') // ignore filese not on disk, like git filese from diff view
-                this._workspaceWordCount[uri.toString()] = wordCount;
+            if (uri.scheme === 'file') {// ignore filese not on disk, like git filese from diff view
+                // important to use doc.uri since vscode dose some wired caching and may have different casing then the actual file…
+                this._workspaceWordCount[doc.uri.toString()] = wordCount;
+            }
             this.updateStatusBar();
         });
     }
@@ -276,7 +278,6 @@ class WordCounterController {
     }
 
     private _onActiveEditorEvent() {
-        this._wordCounter.updateWordCountInAllFiles();
         if (window.activeTextEditor && window.activeTextEditor.document && window.activeTextEditor.document.uri && window.activeTextEditor.document.uri) {
             this._wordCounter.updateWordCountInWorkspace(window.activeTextEditor.document.uri);
         }
